@@ -2,7 +2,6 @@ const { Alchemy, Network } = require('alchemy-sdk');
 const PriceHistory = require('../db/priceHistory');
 const redis = require('../cache/redis');
 const { interpolate } = require('./interpolate');
-const pRetry = (await import('p-retry')).default;
 const { Interface } = require('ethers');
 const fetch = require('node-fetch');
 
@@ -125,28 +124,29 @@ async function getUSDCPriceAtBlock(alchemy, blockNumber) {
 }
 
 async function getTokenPriceAtBlock(token, network, blockNumber) {
+  const pRetry = (await import('p-retry')).default;
   const pool = await getBestUniswapV2Pool(token, network);
   const iface = new Interface(UNISWAP_PAIR_ABI);
   // getReserves
-  const reservesData = await getAlchemyInstance(network).core.call({
+  const reservesData = await pRetry(() => getAlchemyInstance(network).core.call({
     to: pool,
     data: iface.encodeFunctionData("getReserves", [])
-  }, blockNumber);
+  }, blockNumber));
   if (reservesData === '0x') {
     throw new Error('No Uniswap pool data for this block (pool may not exist yet)');
   }
   const [reserve0, reserve1] = iface.decodeFunctionResult("getReserves", reservesData);
   // token0
-  const token0Data = await getAlchemyInstance(network).core.call({
+  const token0Data = await pRetry(() => getAlchemyInstance(network).core.call({
     to: pool,
     data: iface.encodeFunctionData("token0", [])
-  }, blockNumber);
+  }, blockNumber));
   const token0 = iface.decodeFunctionResult("token0", token0Data)[0];
   // token1
-  const token1Data = await getAlchemyInstance(network).core.call({
+  const token1Data = await pRetry(() => getAlchemyInstance(network).core.call({
     to: pool,
     data: iface.encodeFunctionData("token1", [])
-  }, blockNumber);
+  }, blockNumber));
   const token1 = iface.decodeFunctionResult("token1", token1Data)[0];
   // Determine paired token
   let pairedType = null;
@@ -161,10 +161,10 @@ async function getTokenPriceAtBlock(token, network, blockNumber) {
   // If paired with WETH, get ETH/USD price
   if (pairedType === WETH.toLowerCase()) {
     const chainlinkIface = new Interface(CHAINLINK_AGGREGATOR_ABI);
-    const roundData = await getAlchemyInstance(network).core.call({
+    const roundData = await pRetry(() => getAlchemyInstance(network).core.call({
       to: CHAINLINK_ETH_USD,
       data: chainlinkIface.encodeFunctionData("latestRoundData", [])
-    }, blockNumber);
+    }, blockNumber));
     const [, ethUsdRaw] = chainlinkIface.decodeFunctionResult("latestRoundData", roundData);
     const ethUsd = Number(ethUsdRaw) / 1e8;
     return priceInPaired * ethUsd;
@@ -241,6 +241,7 @@ async function getTokenPriceAtTimestamp(token, network, timestamp) {
   if (network === 'ethereum' && tokenInfo) {
     try {
       const alchemy = getAlchemyInstance(network);
+      const pRetry = (await import('p-retry')).default;
       const blockNumber = await pRetry(() => getBlockNumberByTimestamp(network, timestamp), { retries: 3 });
       console.log('blockNumber:', blockNumber);
       const price = await pRetry(() => getTokenPriceAtBlock(token, network, blockNumber), { retries: 3 });
@@ -257,6 +258,7 @@ async function getTokenPriceAtTimestamp(token, network, timestamp) {
   // 5. Fallback: ETH price (mock for other tokens)
   try {
     const alchemy = getAlchemyInstance(network);
+    const pRetry = (await import('p-retry')).default;
     const blockNumber = await pRetry(() => getBlockNumberByTimestamp(network, timestamp), { retries: 3 });
     console.log('blockNumber:', blockNumber);
     const block = await pRetry(() => alchemy.core.getBlock(blockNumber), { retries: 3 });
