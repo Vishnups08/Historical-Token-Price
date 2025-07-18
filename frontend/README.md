@@ -51,14 +51,4 @@ Visit [http://localhost:3000](http://localhost:3000)
 ## State Management
 - Uses Zustand for price, loading, error, and schedule status
 
----
 
-## Extending
-- Add support for Polygon or other EVM chains
-- Add price charts or analytics
-- Add more input validation or UI polish
-
----
-
-## License
-MIT
