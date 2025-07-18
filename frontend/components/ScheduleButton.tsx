@@ -21,8 +21,12 @@ export default function ScheduleButton() {
       } else {
         setScheduleStatus(data.error || "Failed to schedule");
       }
-    } catch (err: any) {
-      setScheduleStatus(err.message || "Request failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setScheduleStatus(err.message || "Request failed");
+      } else {
+        setScheduleStatus("Request failed");
+      }
     }
   };
 
