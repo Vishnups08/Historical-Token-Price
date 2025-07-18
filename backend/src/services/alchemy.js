@@ -2,7 +2,7 @@ const { Alchemy, Network } = require('alchemy-sdk');
 const PriceHistory = require('../db/priceHistory');
 const redis = require('../cache/redis');
 const { interpolate } = require('./interpolate');
-const pRetry = require('p-retry').default;
+const pRetry = (await import('p-retry')).default;
 const { Interface } = require('ethers');
 const fetch = require('node-fetch');
 
