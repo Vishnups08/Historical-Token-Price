@@ -99,7 +99,4 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
 - Add price charts or analytics
 - Add more unit/integration tests
 
----
 
-## License
-MIT
