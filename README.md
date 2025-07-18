@@ -83,16 +83,6 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:4000
 
 ---
 
-## Demo Checklist
-- [ ] Show fetching price for a popular token (USDC, DAI, etc.)
-- [ ] Show interpolation (pick a time between two days)
-- [ ] Show error for old/future/unsupported tokens
-- [ ] Show caching (repeat a query for instant result)
-- [ ] Show scheduling full history and backend logs
-- [ ] Show robustness (stop backend, see frontend error)
-
----
-
 ## Extending
 - Add support for Polygon or other EVM chains
 - Add more DEXs (Sushiswap, UniswapV3)
