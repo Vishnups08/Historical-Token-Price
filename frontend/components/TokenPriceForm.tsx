@@ -17,7 +17,7 @@ export default function TokenPriceForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setPrice(null as any, null as any);
+    setPrice(0, "");
     try {
       const unixTimestamp = Math.floor(new Date(timestamp).getTime() / 1000);
       const res = await fetch("/api/price", {
@@ -31,8 +31,12 @@ export default function TokenPriceForm() {
       } else {
         setError(data.error || "Unknown error");
       }
-    } catch (err: any) {
-      setError(err.message || "Request failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Request failed");
+      } else {
+        setError("Request failed");
+      }
     }
     setLoading(false);
   };
